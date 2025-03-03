@@ -110,7 +110,7 @@ const OrderForm: React.FC = () => {
                 dark:bg-gray-700 dark:text-white
                 hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md`}
               placeholder="exemple@domaine.com"
-              {...register('email', { a
+              {...register('email', { 
                 required: 'L\'email est requis',
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -137,7 +137,7 @@ const OrderForm: React.FC = () => {
                 ${errors.telephone ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'} 
                 dark:bg-gray-700 dark:text-white
                 hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md`}
-              placeholder="Ex: +509 12345678"
+              placeholder="Ex: 0612345678 ou +33612345678"
               {...register('telephone', { 
                 required: 'Le numéro de téléphone est requis',
                 pattern: {
