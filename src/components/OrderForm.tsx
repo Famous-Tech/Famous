@@ -12,6 +12,12 @@ interface FormData {
   message: string;
 }
 
+interface ApiError {
+  success: boolean;
+  message: string;
+  errors: string;
+}
+
 const OrderForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
@@ -32,18 +38,24 @@ const OrderForm: React.FC = () => {
       reset();
     } catch (error) {
       // Log error response safely
-      if (axios.isAxiosError(error)) {
-        console.error('API Error Status:', error.response?.status);
-        console.error('API Error Data:', JSON.stringify(error.response?.data || {}));
+      if (axios.isAxiosError(error) && error.response?.data) {
+        console.error('API Error Status:', error.response.status);
+        console.error('API Error Data:', JSON.stringify(error.response.data));
+        
+        // Affichage du message d'erreur spécifique de l'API
+        const apiError = error.response.data as ApiError;
+        toast.error(apiError.errors || apiError.message || 'Une erreur est survenue lors de l\'envoi de votre commande.');
       } else {
         console.error('Error submitting form:', error instanceof Error ? error.message : String(error));
+        toast.error('Une erreur est survenue lors de l\'envoi de votre commande. Veuillez réessayer.');
       }
-      
-      toast.error('Une erreur est survenue lors de l\'envoi de votre commande. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Expression régulière pour valider le numéro de téléphone (correspond à celle de l'API)
+  const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
 
   return (
     <div id="order-form" className="glass-effect p-8 rounded-2xl shadow-xl max-w-md w-full mx-auto transform transition-all duration-500 hover:shadow-2xl dark:bg-gray-800 dark:border-gray-700">
@@ -71,8 +83,12 @@ const OrderForm: React.FC = () => {
                 ${errors.nom ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'} 
                 dark:bg-gray-700 dark:text-white
                 hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md`}
-              placeholder="Votre nom"
-              {...register('nom', { required: 'Le nom est requis' })}
+              placeholder="Entrez votre nom (minimum 2 caractères)"
+              {...register('nom', { 
+                required: 'Le nom est requis',
+                minLength: { value: 2, message: 'Le nom doit contenir au moins 2 caractères' },
+                maxLength: { value: 100, message: 'Le nom ne peut pas dépasser 100 caractères' }
+              })}
             />
           </div>
           {errors.nom && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.nom.message}</p>}
@@ -93,12 +109,12 @@ const OrderForm: React.FC = () => {
                 ${errors.email ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'} 
                 dark:bg-gray-700 dark:text-white
                 hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md`}
-              placeholder="votre.email@exemple.com"
-              {...register('email', { 
+              placeholder="exemple@domaine.com"
+              {...register('email', { a
                 required: 'L\'email est requis',
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Adresse email invalide'
+                  message: 'Veuillez fournir un email valide'
                 }
               })}
             />
@@ -121,8 +137,14 @@ const OrderForm: React.FC = () => {
                 ${errors.telephone ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'} 
                 dark:bg-gray-700 dark:text-white
                 hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md`}
-              placeholder="Votre numéro de téléphone"
-              {...register('telephone', { required: 'Le numéro de téléphone est requis' })}
+              placeholder="Ex: +509 12345678"
+              {...register('telephone', { 
+                required: 'Le numéro de téléphone est requis',
+                pattern: {
+                  value: phoneRegex,
+                  message: 'Le numéro de téléphone n\'est pas valide'
+                }
+              })}
             />
           </div>
           {errors.telephone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.telephone.message}</p>}
@@ -140,7 +162,7 @@ const OrderForm: React.FC = () => {
               hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md`}
             {...register('type_de_site', { required: 'Veuillez sélectionner un type de site' })}
           >
-            <option value="">Sélectionnez un type</option>
+            <option value="">Choisissez votre type de site</option>
             <option value="Landing Page">Landing Page</option>
             <option value="Blog">Blog</option>
             <option value="Vitrine">Vitrine</option>
@@ -160,7 +182,7 @@ const OrderForm: React.FC = () => {
               id="message"
               rows={4}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 dark:bg-gray-700 dark:text-white hover:border-blue-400 dark:hover:border-blue-400 transform hover:translate-y-[-2px] hover:shadow-md"
-              placeholder="Décrivez votre projet ou ajoutez des précisions..."
+              placeholder="Décrivez votre projet en détail (fonctionnalités souhaitées, design, pages nécessaires...)"
               {...register('message')}
             ></textarea>
           </div>
